@@ -6,7 +6,7 @@ const google = require('googleapis')
 initialize()
 
 function initialize () {
-  authorize(listEvents)
+  authorize().then(listEvents)
 }
 
 function listEvents (auth) {
