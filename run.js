@@ -1,38 +1,33 @@
 'use strict'
 
+const fs = require('fs')
 const authorize = require(`${__dirname}/authorize`)
 const google = require('googleapis')
+const calendar = google.calendar('v3')
 
 initialize()
 
 function initialize () {
-  authorize().then(listEvents)
+  authorize()
+  .then(getAllCalendars)
+  .then(console.log)
 }
 
-function listEvents (auth) {
-  let calendar = google.calendar('v3')
-  calendar.events.list({
-    auth: auth,
-    calendarId: 'primary',
-    timeMin: (new Date()).toISOString(),
-    maxResults: 10,
-    singleEvents: true,
-    orderBy: 'startTime'
-  }, function (err, response) {
-    if (err) {
-      console.log('The API returned an error: ' + err)
-      return
-    }
-    var events = response.items
-    if (events.length === 0) {
-      console.log('No upcoming events found.')
-    } else {
-      console.log('Upcoming 10 events:')
-      for (var i = 0; i < events.length; i++) {
-        var event = events[i]
-        var start = event.start.dateTime || event.start.date
-        console.log('%s - %s', start, event.summary)
-      }
-    }
-  })
+function getAllCalendars (auth) {
+  let data = fs.readFileSync(`${__dirname}/private_data.json`)
+  let calendarIds = JSON.parse(data).calendarIds
+  return Promise.all(calendarIds.map(getCalendar(auth))).catch(console.log)
+}
+
+function getCalendar (auth) {
+  return function (id) {
+    return new Promise((resolve, reject) => {
+      calendar.events.list({
+        auth: auth,
+        calendarId: id
+      }, function (err, res) {
+        if (err) { reject(err) } else { resolve(res) }
+      })
+    })
+  }
 }
