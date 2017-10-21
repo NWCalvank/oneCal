@@ -100,7 +100,10 @@ function storeToken (token) {
       throw err
     }
   }
-  fs.writeFile(TOKEN_PATH, JSON.stringify(token))
+  fs.writeFile(TOKEN_PATH, JSON.stringify(token), successMessage)
+}
+
+function successMessage () {
   console.log('Token stored to ' + TOKEN_PATH)
 }
 
