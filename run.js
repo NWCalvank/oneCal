@@ -10,6 +10,7 @@ const {
   getCalendar
 } = require(`${__dirname}/getters`)
 const copyNewEventsToPrimary = require(`${__dirname}/copyNewEvents`)
+const updateExistingEvents = require(`${__dirname}/updateEvents`)
 
 const { flatten } = require(`${__dirname}/helpers`)
 
@@ -41,8 +42,8 @@ function fetchData (auth) {
 function updateData (authToken) {
   return function (allCalendars) {
     return Promise.all([
-      authToken.then(copyNewEventsToPrimary(allCalendars))
-      // authToken.then(updateExistingEvents(allCalendars))
+      authToken.then(copyNewEventsToPrimary(allCalendars)),
+      authToken.then(updateExistingEvents(allCalendars))
     ])
   }
 }
