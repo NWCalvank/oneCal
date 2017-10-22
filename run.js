@@ -7,25 +7,43 @@ const calendar = google.calendar('v3')
 
 initialize()
 
-// list of events on primary
-// list ofiidd events on other calendars
-// filter other calendar lists to only those events not in primary
-// copy these new events to primary
+// copy new events to primary -- done
+// update existing events on primary if they've changed
+// optional: delete events on primary that don't exist on other calendars
 
 function initialize () {
-  authorize().then(function (auth) {
-    getAllCalendarsAndEvents(auth)
-    .then(copyEvents(auth))
-    .then(_ => console.log('done'))
-    .catch(console.log)
+  let authToken = authorize()
+  Promise.all([
+    authToken.then(auth => getAllCalendarsAndEvents(auth)(`${__dirname}/private_data.json`)).catch(console.log),
+    authToken.then(auth => getCalendar(auth)('primary')).catch(console.log)
+  ])
+  .then(filterEvents)
+  .then(function (newEvents) { return authToken.then(auth => copyEvents(auth)(newEvents)) })
+  .then(successMessage)
+  .catch(console.log)
+}
+
+function successMessage (dataArr) {
+  dataArr.map(promise => {
+    promise.then(data => console.log(`The script completed with the following update: ${data}`))
   })
 }
 
+function flatten (arr) {
+  return arr.reduce((arr1, arr2) => {
+    return arr1.concat(arr2)
+  }, [])
+}
+
+function filterEvents ([ allOtherCalendars, primaryCalendar ]) {
+  let primaryIds = primaryCalendar.map(x => x.id)
+  let oneCal = flatten(allOtherCalendars)
+  return oneCal.filter((cal) => primaryIds.indexOf(cal.id) === -1)
+}
+
 function copyEvents (auth) {
-  return function (allCalendars) {
-    return allCalendars.map(function (events) {
-      return events.map(copyEvent(auth))
-    })
+  return function (newEvents) {
+    return newEvents.map(copyEvent(auth))
   }
 }
 
@@ -45,9 +63,11 @@ function copyEvent (auth) {
 }
 
 function getAllCalendarsAndEvents (auth) {
-  let calendarIds = getAllCalendars(`${__dirname}/private_data.json`)
-  return Promise.all(calendarIds.map(getCalendar(auth)))
-                .catch(console.log)
+  return function (path) {
+    let calendarIds = getAllCalendars(path)
+    return Promise.all(calendarIds.map(getCalendar(auth)))
+                  .catch(console.log)
+  }
 }
 
 function getAllCalendars (path) {
