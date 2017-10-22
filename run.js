@@ -8,23 +8,14 @@ const {
   getAllCalendarsAndEvents,
   getCalendar
 } = require(`${__dirname}/getters`)
-const {
-  flatten
-} = require(`${__dirname}/helpers`)
 
 initialize()
-
-// copy new events to primary -- done
-// update existing events on primary if they've changed -- done
-// optional: delete events on primary that don't exist on other calendars
 
 function initialize () {
   let authToken = authorize()
   authToken
   .then(fetchData)
   .then(updateData(authToken))
-  .then(flatten)
-  .then(successMessage)
   .catch(console.log)
 }
 
@@ -40,19 +31,21 @@ function fetchData (auth) {
 function updateData (authToken) {
   return function (allCalendars) {
     return Promise.all([
-      authToken.then(copyNewEventsToPrimary(allCalendars)),
-      authToken.then(updateExistingEvents(allCalendars))
+      authToken.then(copyNewEventsToPrimary(allCalendars)).then(successMessage('created')),
+      authToken.then(updateExistingEvents(allCalendars)).then(successMessage('updated'))
     ])
   }
 }
 
 // successMessage :: [[Promise]] -> void
-function successMessage (dataArr) {
-  if (dataArr.length !== 0) {
-    dataArr.map(promise => {
-      promise.then(data => console.log(`The script completed with the following update: ${data.summary}`))
-    })
-  } else {
-    console.log('No events added or updated')
+function successMessage (state) {
+  return function (dataArr) {
+    if (dataArr.length !== 0) {
+      dataArr.map(promise => {
+        promise.then(data => console.log(`The following event has been ${state}: ${data.summary}`))
+      })
+    } else {
+      console.log(`No events ${state}`)
+    }
   }
 }

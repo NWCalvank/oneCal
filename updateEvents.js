@@ -25,7 +25,7 @@ function filterEvents ([ allOtherCalendars, primaryCalendar ]) {
 function onlyChangedEvents (primaryIds, primaryCalendar) {
   return function (cal) {
     let i = primaryIds.indexOf(cal.id)
-    let ev = primaryCalendar[i]
+    let ev = i !== -1 ? primaryCalendar[i] : {}
     let keys = Object.keys(ev)
     let attrs = ['status', 'summary', 'description', 'location', 'start', 'end']
     let filteredKeys = keys.filter(isInArray(attrs))
@@ -36,7 +36,7 @@ function onlyChangedEvents (primaryIds, primaryCalendar) {
         return cal[key].dateTime !== ev[key].dateTime
       }
     })
-    .reduce(any)
+    .reduce(any, false)
   }
 }
 
