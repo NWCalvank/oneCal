@@ -2,7 +2,8 @@
 
 module.exports = {
   flatten,
-  any
+  any,
+  isInArray
 }
 
 function flatten (arr) {
@@ -13,4 +14,10 @@ function flatten (arr) {
 
 function any (acc, val) {
   return acc || val
+}
+
+function isInArray (arr) {
+  return function (elem) {
+    return arr.indexOf(elem) !== -1
+  }
 }

@@ -1,23 +1,21 @@
 'use strict'
 
-// const fs = require('fs')
-// const google = require('googleapis')
-// const calendar = google.calendar('v3')
-
 const authorize = require(`${__dirname}/authorize`)
+const copyNewEventsToPrimary = require(`${__dirname}/copyNewEvents`)
+const updateExistingEvents = require(`${__dirname}/updateEvents`)
+
 const {
   getAllCalendarsAndEvents,
   getCalendar
 } = require(`${__dirname}/getters`)
-const copyNewEventsToPrimary = require(`${__dirname}/copyNewEvents`)
-const updateExistingEvents = require(`${__dirname}/updateEvents`)
-
-const { flatten } = require(`${__dirname}/helpers`)
+const {
+  flatten
+} = require(`${__dirname}/helpers`)
 
 initialize()
 
 // copy new events to primary -- done
-// update existing events on primary if they've changed
+// update existing events on primary if they've changed -- done
 // optional: delete events on primary that don't exist on other calendars
 
 function initialize () {
@@ -52,7 +50,7 @@ function updateData (authToken) {
 function successMessage (dataArr) {
   if (dataArr.length !== 0) {
     dataArr.map(promise => {
-      promise.then(data => console.log(`The script completed with the following update: ${data}`))
+      promise.then(data => console.log(`The script completed with the following update: ${data.summary}`))
     })
   } else {
     console.log('No events added or updated')
