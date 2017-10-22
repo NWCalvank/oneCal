@@ -13,13 +13,8 @@ initialize()
 
 function initialize () {
   let authToken = authorize()
-  Promise.all([
-    authToken.then(auth => getAllCalendarsAndEvents(auth)(`${__dirname}/private_data.json`)).catch(console.log),
-    authToken.then(auth => getCalendar(auth)('primary')).catch(console.log)
-  ])
-  .then(filterEvents)
-  .then(function (newEvents) { return authToken.then(auth => copyEvents(auth)(newEvents)) })
-  .then(successMessage)
+  authToken.then(copyNewEventsToPrimary)
+  // authToken.then(updateExistingEvents)
   .catch(console.log)
 }
 
@@ -27,6 +22,17 @@ function successMessage (dataArr) {
   dataArr.map(promise => {
     promise.then(data => console.log(`The script completed with the following update: ${data}`))
   })
+}
+
+function copyNewEventsToPrimary (auth) {
+  return Promise.all([
+    getAllCalendarsAndEvents(auth)(`${__dirname}/private_data.json`),
+    getCalendar(auth)('primary')
+  ])
+  .then(filterEvents)
+  .then(copyEvents(auth))
+  .then(successMessage)
+  .catch(console.log)
 }
 
 function flatten (arr) {
