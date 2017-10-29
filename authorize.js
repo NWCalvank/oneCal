@@ -1,9 +1,9 @@
-let fs = require('fs')
-let readline = require('readline')
-let GoogleAuth = require('google-auth-library')
+const fs = require('fs')
+const GoogleAuth = require('google-auth-library')
+const logError = require(`${__dirname}/logError`)
+const readline = require('readline')
 
 // If modifying these scopes, delete your previously saved credentials
-// at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
 let SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 function tokenDir (user) {
@@ -30,7 +30,7 @@ function readFilePromise (path) {
 function initialize (user) {
   return readFilePromise(`${__dirname}/client_secret.json`)
          .then(authorize(user))
-         .catch(console.log)
+         .catch(logError)
 }
 
 /**

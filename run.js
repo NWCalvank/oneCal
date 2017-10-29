@@ -1,26 +1,28 @@
 'use strict'
 
 const authorize = require(`${__dirname}/authorize`)
-const copyNewEventsToPrimary = require(`${__dirname}/copyNewEvents`)
-const updateExistingEvents = require(`${__dirname}/updateEvents`)
 const config = require(`${__dirname}/config.json`)
+const copyNewEventsToPrimary = require(`${__dirname}/copyNewEvents`)
+const logError = require(`${__dirname}/logError`)
+const updateExistingEvents = require(`${__dirname}/updateEvents`)
 
 const {
   getAllCalendarsAndEvents,
   getCalendar
 } = require(`${__dirname}/getters`)
 
-let users = Object.keys(config)
+!(function initialize () {
+  let users = Object.keys(config)
+  users.forEach(syncToMainCalendar)
+})()
 
-users.forEach(initialize)
-
-function initialize (user) {
+function syncToMainCalendar (user) {
   let authToken = authorize(user)
   let mainAuthToken = user === 'main' ? authToken : authorize('main')
   Promise.all([authToken, mainAuthToken])
     .then(fetchData(user))
     .then(updateData(mainAuthToken))
-    .catch(console.log)
+    .catch(logError)
 }
 
 // fetchData :: String -> Promise { [Object] }
@@ -32,7 +34,7 @@ function fetchData (user) {
       // always get the primary calendar for the main users
       getCalendar(mainAuth)('primary')
     ])
-    .catch(console.log)
+    .catch(logError)
   }
 }
 
@@ -43,7 +45,7 @@ function updateData (authToken) {
       authToken.then(copyNewEventsToPrimary(allCalendars)).then(successMessage('created')),
       authToken.then(updateExistingEvents(allCalendars)).then(successMessage('updated'))
     ])
-    .catch(console.log)
+    .catch(logError)
   }
 }
 
