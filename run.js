@@ -3,6 +3,7 @@
 const authorize = require(`${__dirname}/authorize`)
 const config = require(`${__dirname}/config.json`)
 const copyNewEventsToPrimary = require(`${__dirname}/copyNewEvents`)
+const deleteCancelledEvents = require(`${__dirname}/deleteEvents`)
 const logError = require(`${__dirname}/logError`)
 const updateExistingEvents = require(`${__dirname}/updateEvents`)
 
@@ -11,17 +12,28 @@ const {
   getCalendar
 } = require(`${__dirname}/getters`)
 
+const { flatten } = require(`${__dirname}/helpers`)
+
+const mainAuthToken = authorize('main')
+
 !(function initialize () {
   let users = Object.keys(config)
-  users.forEach(syncToMainCalendar)
+  Promise.all(users.map(syncToMainCalendar))
+    .then(function (everyCalendar) {
+      let nestedOtherCalendars = everyCalendar.map(xs => xs[0])
+      let primaryCalendar = everyCalendar[0][1]
+      let allOtherCalendars = flatten(nestedOtherCalendars)
+      return mainAuthToken.then(deleteCancelledEvents([allOtherCalendars, primaryCalendar]))
+                          .then(successMessage('deleted'))
+    })
+    .catch(logError)
 })()
 
 function syncToMainCalendar (user) {
-  let authToken = authorize(user)
-  let mainAuthToken = user === 'main' ? authToken : authorize('main')
-  Promise.all([authToken, mainAuthToken])
+  let authToken = user === 'main' ? mainAuthToken : authorize(user)
+  return Promise.all([authToken, mainAuthToken])
     .then(fetchData(user))
-    .then(updateData(mainAuthToken))
+    .then(updateData)
     .catch(logError)
 }
 
@@ -31,7 +43,7 @@ function fetchData (user) {
     return Promise.all([
       // get all data for current user
       getAllCalendarsAndEvents(auth)(`${__dirname}/config.json`, user),
-      // always get the primary calendar for the main users
+      // always get the primary calendar for the main user
       getCalendar(mainAuth)('primary')
     ])
     .catch(logError)
@@ -39,14 +51,16 @@ function fetchData (user) {
 }
 
 // updateData :: Promise -> [Object] -> Promise { }
-function updateData (authToken) {
-  return function (allCalendars) {
-    return Promise.all([
-      authToken.then(copyNewEventsToPrimary(allCalendars)).then(successMessage('created')),
-      authToken.then(updateExistingEvents(allCalendars)).then(successMessage('updated'))
-    ])
-    .catch(logError)
-  }
+function updateData (allCalendars) {
+  return Promise.all([
+    mainAuthToken.then(copyNewEventsToPrimary(allCalendars)).then(successMessage('created')),
+    mainAuthToken.then(updateExistingEvents(allCalendars)).then(successMessage('updated'))
+  ])
+  .then(_ => allCalendars)
+  .catch(function (err) {
+    logError(err)
+    return allCalendars
+  })
 }
 
 // successMessage :: [[Promise]] -> void
