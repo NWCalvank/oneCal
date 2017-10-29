@@ -42,7 +42,8 @@ function onlyChangedEvents (primaryIds, primaryCalendar) {
 
 function updateEvents (auth) {
   return function (changedEvents) {
-    return changedEvents.map(updateEvent(auth))
+    let updatedEvents = changedEvents.map(updateEvent(auth))
+    return Promise.all(updatedEvents)
   }
 }
 
@@ -58,6 +59,5 @@ function updateEvent (auth) {
         if (err) { reject(err) } else { resolve(res) }
       })
     })
-    .catch(console.log)
   }
 }

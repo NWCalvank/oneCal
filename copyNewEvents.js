@@ -24,7 +24,8 @@ function filterEvents ([ allOtherCalendars, primaryCalendar ]) {
 
 function copyEvents (auth) {
   return function (newEvents) {
-    return newEvents.map(copyEvent(auth))
+    let createdEvents = newEvents.map(copyEvent(auth))
+    return Promise.all(createdEvents)
   }
 }
 
@@ -39,6 +40,5 @@ function copyEvent (auth) {
         if (err) { reject(err) } else { resolve(res) }
       })
     })
-    .catch(console.log)
   }
 }
