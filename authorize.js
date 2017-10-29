@@ -6,26 +6,6 @@ const readline = require('readline')
 // If modifying these scopes, delete your previously saved credentials
 let SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-function tokenDir (user) {
-  return `${__dirname}/users/${user}/.credentials/`
-}
-
-function tokenPath (user) {
-  return `${tokenDir(user)}authorization.json`
-}
-
-function readFilePromise (path) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(path, function (err, res) {
-      if (err) {
-        reject('Error loading client secret file: ' + err)
-      } else {
-        resolve(res)
-      }
-    })
-  })
-}
-
 // Load client secrets from a local file.
 function initialize (user) {
   return readFilePromise(`${__dirname}/client_secret.json`)
@@ -109,6 +89,26 @@ function storeToken (token, user) {
     }
   }
   fs.writeFile(tokenPath(user), JSON.stringify(token), successMessage(user))
+}
+
+function tokenDir (user) {
+  return `${__dirname}/users/${user}/.credentials/`
+}
+
+function tokenPath (user) {
+  return `${tokenDir(user)}authorization.json`
+}
+
+function readFilePromise (path) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path, function (err, res) {
+      if (err) {
+        reject('Error loading client secret file: ' + err)
+      } else {
+        resolve(res)
+      }
+    })
+  })
 }
 
 function successMessage (user) {
