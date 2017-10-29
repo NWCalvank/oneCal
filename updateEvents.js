@@ -2,6 +2,7 @@
 
 const google = require('googleapis')
 const calendar = google.calendar('v3')
+const logError = require(`${__dirname}/logError`)
 
 const { flatten, any, isInArray } = require(`${__dirname}/helpers`)
 
@@ -12,7 +13,7 @@ function updateExistingEvents (allCalendars) {
     return Promise.resolve(allCalendars)
       .then(filterEvents)
       .then(updateEvents(auth))
-      .catch(console.log)
+      .catch(logError)
   }
 }
 
@@ -42,7 +43,8 @@ function onlyChangedEvents (primaryIds, primaryCalendar) {
 
 function updateEvents (auth) {
   return function (changedEvents) {
-    return changedEvents.map(updateEvent(auth))
+    let updatedEvents = changedEvents.map(updateEvent(auth))
+    return Promise.all(updatedEvents)
   }
 }
 
@@ -58,6 +60,5 @@ function updateEvent (auth) {
         if (err) { reject(err) } else { resolve(res) }
       })
     })
-    .catch(console.log)
   }
 }

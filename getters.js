@@ -10,16 +10,16 @@ module.exports = {
 }
 
 function getAllCalendarsAndEvents (auth) {
-  return function (path) {
-    let calendarIds = getAllCalendars(path)
+  return function (path, user) {
+    let calendarIds = getAllCalendars(path, user)
     return Promise.all(calendarIds.map(getCalendar(auth)))
                   .catch(console.log)
   }
 }
 
-function getAllCalendars (path) {
+function getAllCalendars (path, user) {
   let data = fs.readFileSync(path)
-  return JSON.parse(data).calendarIds
+  return JSON.parse(data)[user].calendarIds
 }
 
 function getCalendar (auth) {

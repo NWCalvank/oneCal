@@ -2,6 +2,7 @@
 
 const google = require('googleapis')
 const calendar = google.calendar('v3')
+const logError = require(`${__dirname}/logError`)
 
 const { flatten } = require(`${__dirname}/helpers`)
 
@@ -12,7 +13,7 @@ function copyNewEventsToPrimary (allCalendars) {
     return Promise.resolve(allCalendars)
       .then(filterEvents)
       .then(copyEvents(auth))
-      .catch(console.log)
+      .catch(logError)
   }
 }
 
@@ -24,7 +25,8 @@ function filterEvents ([ allOtherCalendars, primaryCalendar ]) {
 
 function copyEvents (auth) {
   return function (newEvents) {
-    return newEvents.map(copyEvent(auth))
+    let createdEvents = newEvents.map(copyEvent(auth))
+    return Promise.all(createdEvents)
   }
 }
 
@@ -39,6 +41,5 @@ function copyEvent (auth) {
         if (err) { reject(err) } else { resolve(res) }
       })
     })
-    .catch(console.log)
   }
 }
