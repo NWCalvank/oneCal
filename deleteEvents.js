@@ -20,12 +20,15 @@ function deleteCancelledEvents (allCalendars) {
 function filterEvents ([ allOtherCalendars, primaryCalendar ]) {
   let oneCal = flatten(allOtherCalendars)
   let eventIds = oneCal.map(x => x.id)
-  return primaryCalendar.filter(onlyCancelledEvents(eventIds))
+  let iCalUIds = oneCal.map(x => x.iCalUID)
+  let allIds = [...eventIds, ...iCalUIds]
+  return primaryCalendar.filter(onlyCancelledEvents(allIds))
 }
 
-function onlyCancelledEvents (eventIds) {
+function onlyCancelledEvents (allIds) {
   return function (primary) {
-    return eventIds.indexOf(primary.id) === -1
+    return allIds.indexOf(primary.id) === -1 &&
+           allIds.indexOf(primary.iCalUID) === -1
   }
 }
 
@@ -44,7 +47,7 @@ function deleteEvent (auth) {
         calendarId: 'primary',
         eventId: e.id
       }, function (err, res) {
-        if (err) { reject(err) } else { resolve(res) }
+        if (err) { reject(err) } else { resolve(e) }
       })
     })
   }

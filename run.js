@@ -67,13 +67,11 @@ function updateData (allCalendars) {
 function successMessage (state) {
   return function (dataArr) {
     if (dataArr === undefined) {
-      console.log('The server rejected one or more actions')
+      return console.log('The server rejected one or more actions')
     } else if (dataArr.length !== 0) {
-      dataArr.map(promise => {
-        promise.then(data => console.log(`The following event has been ${state}: ${data.summary}`))
-      })
+      return dataArr.map(data => console.log(`The following event has been ${state}: ${data.summary}`))
     } else {
-      console.log(`No events ${state}`)
+      return console.log(`No events ${state}`)
     }
   }
 }

@@ -19,8 +19,10 @@ function updateExistingEvents (allCalendars) {
 
 function filterEvents ([ allOtherCalendars, primaryCalendar ]) {
   let primaryIds = primaryCalendar.map(x => x.id)
+  let iCalUIds = primaryCalendar.map(x => x.iCalUID)
+  let allIds = [...primaryIds, ...iCalUIds]
   let oneCal = flatten(allOtherCalendars)
-  return oneCal.filter(onlyChangedEvents(primaryIds, primaryCalendar))
+  return oneCal.filter(onlyChangedEvents(allIds, primaryCalendar))
 }
 
 function onlyChangedEvents (primaryIds, primaryCalendar) {
@@ -50,13 +52,16 @@ function updateEvents (auth) {
 
 function updateEvent (auth) {
   return function (e) {
+    let body = {
+      auth: auth,
+      calendarId: 'primary',
+      eventId: e.id,
+      iCalUID: e.iCalUID,
+      resource: e
+    }
+    if (body.iCalUID !== undefined) { delete body.id }
     return new Promise((resolve, reject) => {
-      calendar.events.update({
-        auth: auth,
-        calendarId: 'primary',
-        eventId: e.id,
-        resource: e
-      }, function (err, res) {
+      calendar.events.update(body, function (err, res) {
         if (err) { reject(err) } else { resolve(res) }
       })
     })

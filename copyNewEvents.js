@@ -19,8 +19,17 @@ function copyNewEventsToPrimary (allCalendars) {
 
 function filterEvents ([ allOtherCalendars, primaryCalendar ]) {
   let primaryIds = primaryCalendar.map(x => x.id)
+  let iCalUIds = primaryCalendar.map(x => x.iCalUID)
+  let allIds = [...primaryIds, ...iCalUIds]
   let oneCal = flatten(allOtherCalendars)
-  return oneCal.filter((cal) => primaryIds.indexOf(cal.id) === -1)
+  return oneCal.filter(onlyNewEvents(allIds))
+}
+
+function onlyNewEvents (allIds) {
+  return function (primary) {
+    return allIds.indexOf(primary.id) === -1 &&
+           allIds.indexOf(primary.iCalUID) === -1
+  }
 }
 
 function copyEvents (auth) {
@@ -32,6 +41,7 @@ function copyEvents (auth) {
 
 function copyEvent (auth) {
   return function (e) {
+    if (e.iCalUID !== undefined) { delete e.id }
     return new Promise((resolve, reject) => {
       calendar.events.insert({
         auth: auth,
